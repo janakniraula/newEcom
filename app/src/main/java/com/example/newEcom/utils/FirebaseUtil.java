@@ -46,6 +46,10 @@ public class FirebaseUtil {
         return FirebaseFirestore.getInstance().collection("orders").document(FirebaseAuth.getInstance().getUid()).collection("items");
     }
 
+    public static CollectionReference allOrdersCollectionReference() {
+        return FirebaseFirestore.getInstance().collection("orders");
+    }
+
     public static CollectionReference getReviews(int pid){
         return FirebaseFirestore.getInstance().collection("reviews").document(pid+"").collection("review");
     }

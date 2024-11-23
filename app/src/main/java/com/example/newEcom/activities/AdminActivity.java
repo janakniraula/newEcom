@@ -19,7 +19,8 @@ import com.google.firebase.firestore.DocumentSnapshot;
 public class AdminActivity extends AppCompatActivity {
     LinearLayout logoutBtn;
     CardView addProductBtn, modifyProductBtn, addCategoryBtn, modifyCategoryBtn, addBannerBtn, modifyBannerBtn;
-    TextView countOrders, priceOrders, usersTextView;
+    TextView countOrders, priceOrders;
+    LinearLayout orderLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,10 +35,14 @@ public class AdminActivity extends AppCompatActivity {
         addBannerBtn = findViewById(R.id.addBannerBtn);
         modifyBannerBtn = findViewById(R.id.modifyBannerBtn);
         countOrders = findViewById(R.id.countOrders);
+        orderLayout = findViewById(R.id.orderLayout);
         priceOrders = findViewById(R.id.priceOrders);
-//        usersTextView = findViewById(R.id.usersTextView);
 
         getDetails();
+
+        orderLayout.setOnClickListener(v -> {
+            startActivity(new Intent(this, ViewOrderActivity.class));
+        });
 
         logoutBtn.setOnClickListener(v -> {
             FirebaseAuth.getInstance().signOut();
