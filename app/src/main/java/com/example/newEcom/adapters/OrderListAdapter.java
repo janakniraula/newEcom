@@ -7,8 +7,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -25,6 +27,15 @@ import java.text.SimpleDateFormat;
 public class OrderListAdapter extends FirestoreRecyclerAdapter<OrderItemModel, OrderListAdapter.OrderListViewHolder> {
     private Context context;
     private AppCompatActivity activity;
+    private OnItemLongClickListener longClickListener;
+
+    public interface OnItemLongClickListener {
+        void onItemLongClick(OrderItemModel order, int position);
+    }
+
+    public void setOnItemLongClickListener(OnItemLongClickListener listener) {
+        this.longClickListener = listener;
+    }
 
     public OrderListAdapter(@NonNull FirestoreRecyclerOptions<OrderItemModel> options, Context context) {
         super(options);
@@ -36,7 +47,7 @@ public class OrderListAdapter extends FirestoreRecyclerAdapter<OrderItemModel, O
     public OrderListViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(context).inflate(R.layout.item_order_adapter, parent, false);
         activity = (AppCompatActivity) view.getContext();
-        return new OrderListAdapter.OrderListViewHolder(view);
+        return new OrderListViewHolder(view);
     }
 
     @Override
@@ -51,11 +62,35 @@ public class OrderListAdapter extends FirestoreRecyclerAdapter<OrderItemModel, O
         bundle.putInt("orderId", model.getOrderId());
         OrderDetailsFragment fragment = new OrderDetailsFragment();
         fragment.setArguments(bundle);
+
         holder.itemView.setOnClickListener(v -> {
             if (!fragment.isAdded())
-                activity.getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, fragment).addToBackStack(null).commit();
+                activity.getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.main_frame_layout, fragment)
+                        .addToBackStack(null)
+                        .commit();
+        });
+
+        // Add long-click logic to delete the order
+        holder.itemView.setOnLongClickListener(v -> {
+            new AlertDialog.Builder(context)
+                    .setTitle("Delete Order")
+                    .setMessage("Are you sure you want to delete this order?")
+                    .setPositiveButton("Delete", (dialog, which) -> {
+                        // Delete the document from Firestore
+                        getSnapshots().getSnapshot(holder.getBindingAdapterPosition()).getReference()
+                                .delete()
+                                .addOnSuccessListener(aVoid ->
+                                        Toast.makeText(context, "Order deleted successfully!", Toast.LENGTH_SHORT).show())
+                                .addOnFailureListener(e ->
+                                        Toast.makeText(context, "Failed to delete order!", Toast.LENGTH_SHORT).show());
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
+            return true;
         });
     }
+
 
     public class OrderListViewHolder extends RecyclerView.ViewHolder {
         ImageView productImage;
