@@ -7,13 +7,10 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import android.graphics.Color;
-import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
-import android.widget.Toast;
 
 import com.example.newEcom.R;
 import com.example.newEcom.fragments.CartFragment;
@@ -24,14 +21,10 @@ import com.example.newEcom.fragments.SearchFragment;
 import com.example.newEcom.fragments.WishlistFragment;
 import com.example.newEcom.utils.FirebaseUtil;
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.badge.BadgeDrawable;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationBarView;
-import com.google.firebase.dynamiclinks.FirebaseDynamicLinks;
-import com.google.firebase.dynamiclinks.PendingDynamicLinkData;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.mancj.materialsearchbar.MaterialSearchBar;
 import com.mancj.materialsearchbar.SimpleOnSearchActionListener;
@@ -54,16 +47,28 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        initializeViews();
+        setupFragments();
+        setupBottomNavigation();
+        setupSearchBar();
+        handleOrderPlacedIntent();
+    }
+
+    private void initializeViews() {
         searchLinearLayout = findViewById(R.id.linearLayout);
         searchBar = findViewById(R.id.searchBar);
+        bottomNavigationView = findViewById(R.id.bottom_navigation);
+    }
 
+    private void setupFragments() {
         homeFragment = new HomeFragment();
         cartFragment = new CartFragment();
         wishlistFragment = new WishlistFragment();
         profileFragment = new ProfileFragment();
         searchFragment = new SearchFragment();
+    }
 
-        bottomNavigationView = findViewById(R.id.bottom_navigation);
+    private void setupBottomNavigation() {
         bottomNavigationView.setOnItemSelectedListener(new NavigationBarView.OnItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -72,23 +77,19 @@ public class MainActivity extends AppCompatActivity {
 
                 if (item.getItemId() == R.id.home) {
                     fm.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
-//                    transaction.setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right);
                     transaction.replace(R.id.main_frame_layout, homeFragment, "home");
                 } else if (item.getItemId() == R.id.cart) {
                     if (!cartFragment.isAdded()) {
-//                        transaction.setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right);
                         transaction.replace(R.id.main_frame_layout, cartFragment, "cart");
                         transaction.addToBackStack(null);
                     }
                 } else if (item.getItemId() == R.id.wishlist) {
                     if (!wishlistFragment.isAdded()) {
-//                        transaction.setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right);
                         transaction.replace(R.id.main_frame_layout, wishlistFragment, "wishlist");
                         transaction.addToBackStack(null);
                     }
                 } else if (item.getItemId() == R.id.profile) {
                     if (!profileFragment.isAdded()) {
-//                        transaction.setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right);
                         transaction.replace(R.id.main_frame_layout, profileFragment, "profile");
                         transaction.addToBackStack(null);
                     }
@@ -97,6 +98,7 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
         });
+
         bottomNavigationView.setSelectedItemId(R.id.home);
         addOrRemoveBadge();
 
@@ -106,7 +108,9 @@ public class MainActivity extends AppCompatActivity {
                 updateBottomNavigationSelectedItem();
             }
         });
+    }
 
+    private void setupSearchBar() {
         searchBar.setOnSearchActionListener(new SimpleOnSearchActionListener() {
             @Override
             public void onSearchStateChanged(boolean enabled) {
@@ -115,8 +119,12 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onSearchConfirmed(CharSequence text) {
-                if (!searchFragment.isAdded())
-                    getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, searchFragment, "search").addToBackStack(null).commit();
+                if (!searchFragment.isAdded()) {
+                    getSupportFragmentManager().beginTransaction()
+                            .replace(R.id.main_frame_layout, searchFragment, "search")
+                            .addToBackStack(null)
+                            .commit();
+                }
                 super.onSearchConfirmed(text);
             }
 
@@ -125,42 +133,47 @@ public class MainActivity extends AppCompatActivity {
                 super.onButtonClicked(buttonCode);
             }
         });
+    }
 
-        handleDeepLink();
-
-        if (getIntent().getBooleanExtra("orderPlaced", false)){
-            getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, profileFragment, "profile").addToBackStack(null).commit();
+    private void handleOrderPlacedIntent() {
+        if (getIntent().getBooleanExtra("orderPlaced", false)) {
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.main_frame_layout, profileFragment, "profile")
+                    .addToBackStack(null)
+                    .commit();
             bottomNavigationView.setSelectedItemId(R.id.profile);
         }
     }
 
-    public void showSearchBar(){
+    public void showSearchBar() {
         searchLinearLayout.setVisibility(View.VISIBLE);
     }
 
-    public void hideSearchBar(){
+    public void hideSearchBar() {
         searchLinearLayout.setVisibility(View.GONE);
     }
 
     @Override
     public void onBackPressed() {
-        if (fm.getBackStackEntryCount() > 0)
+        if (fm.getBackStackEntryCount() > 0) {
             fm.popBackStack();
-        else
+        } else {
             super.onBackPressed();
+        }
     }
 
     private void updateBottomNavigationSelectedItem() {
         Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.main_frame_layout);
 
-        if (currentFragment instanceof HomeFragment)
+        if (currentFragment instanceof HomeFragment) {
             bottomNavigationView.setSelectedItemId(R.id.home);
-        else if (currentFragment instanceof CartFragment)
+        } else if (currentFragment instanceof CartFragment) {
             bottomNavigationView.setSelectedItemId(R.id.cart);
-        else if (currentFragment instanceof WishlistFragment)
+        } else if (currentFragment instanceof WishlistFragment) {
             bottomNavigationView.setSelectedItemId(R.id.wishlist);
-        else if (currentFragment instanceof ProfileFragment)
+        } else if (currentFragment instanceof ProfileFragment) {
             bottomNavigationView.setSelectedItemId(R.id.profile);
+        }
     }
 
     public void addOrRemoveBadge() {
@@ -168,7 +181,7 @@ public class MainActivity extends AppCompatActivity {
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()){
+                        if (task.isSuccessful()) {
                             int n = task.getResult().size();
                             BadgeDrawable badge = bottomNavigationView.getOrCreateBadge(R.id.cart);
                             badge.setBackgroundColor(Color.parseColor("#FFF44336"));
@@ -183,40 +196,4 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
     }
-
-    private void handleDeepLink(){
-        FirebaseDynamicLinks.getInstance().getDynamicLink(getIntent())
-                .addOnSuccessListener(new OnSuccessListener<PendingDynamicLinkData>() {
-                    @Override
-                    public void onSuccess(PendingDynamicLinkData pendingDynamicLinkData) {
-                        Uri deepLink = null;
-                        if (pendingDynamicLinkData != null)
-                            deepLink = pendingDynamicLinkData.getLink();
-
-                        if (deepLink != null){
-                            Log.i("DeepLink", deepLink.toString());
-                            String productId = deepLink.getQueryParameter("product_id");
-                            Fragment fragment = ProductFragment.newInstance(Integer.parseInt(productId));
-                            getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, fragment).addToBackStack(null).commit();
-                        }
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.i("Error123", e.toString());
-                    }
-                });
-    }
-
-//    @Override
-//    protected void onStart() {
-//        super.onStart();
-//        categoryAdapter.startListening();
-//    }
-//    @Override
-//    protected void onStop() {
-//        super.onStop();
-//        categoryAdapter.stopListening();
-//    }
 }

@@ -11,13 +11,15 @@ import android.os.Bundle;
 import android.transition.Explode;
 import android.util.Patterns;
 import android.view.View;
-import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.util.Arrays;
+import java.util.List;
 
 import com.example.newEcom.R;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -31,10 +33,13 @@ import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.GoogleAuthProvider;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QuerySnapshot;
 
 public class LoginActivity extends AppCompatActivity {
+    private static final List<String> ADMIN_EMAILS = Arrays.asList(
+            "Sthalotus11@gmail.com",
+            "niraulajanak2019@gmail.com"
+    );
+
     ProgressBar progressBar;
     EditText emailEditText, passEditText;
     ImageView loginBtn;
@@ -71,7 +76,7 @@ public class LoginActivity extends AppCompatActivity {
 
         googleSignInClient = GoogleSignIn.getClient(this, gso);
 
-        googleLoginBtn.setOnClickListener(v -> googleSignin());
+        googleLoginBtn.setOnClickListener(v -> googleSigning());
 
         getWindow().setExitTransition(new Explode());
     }
@@ -80,9 +85,9 @@ public class LoginActivity extends AppCompatActivity {
         String email = emailEditText.getText().toString();
         String pass = passEditText.getText().toString();
         boolean isValidated = validate(email, pass);
-        if (! isValidated)
+        if (!isValidated)
             return;
-        loginAccountInFirebase(email,pass);
+        loginAccountInFirebase(email, pass);
     }
 
     private void loginAccountInFirebase(String email, String pass) {
@@ -92,26 +97,26 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onComplete(@NonNull Task<AuthResult> task) {
                 changeInProgress(false);
-                if (task.isSuccessful()){
-                    if (firebaseAuth.getCurrentUser().isEmailVerified()){
-                        if (firebaseAuth.getCurrentUser().getEmail().equals("harshlohiya.photos@gmail.com"))
-                            startActivity(new Intent(LoginActivity.this, AdminActivity.class), ActivityOptions.makeSceneTransitionAnimation(activity).toBundle());
+                if (task.isSuccessful()) {
+                    if (firebaseAuth.getCurrentUser().isEmailVerified()) {
+                        if (ADMIN_EMAILS.contains(firebaseAuth.getCurrentUser().getEmail()))
+                            startActivity(new Intent(LoginActivity.this, AdminActivity.class),
+                                    ActivityOptions.makeSceneTransitionAnimation(activity).toBundle());
                         else
                             startActivity(new Intent(LoginActivity.this, MainActivity.class));
                         finish();
                     } else {
                         Toast.makeText(LoginActivity.this, "Email not verified, please verify your email", Toast.LENGTH_SHORT).show();
                     }
-                }
-                else {
+                } else {
                     Toast.makeText(LoginActivity.this, "Something went wrong!", Toast.LENGTH_SHORT).show();
                 }
             }
         });
     }
 
-    private void changeInProgress(boolean inProgress){
-        if (inProgress){
+    private void changeInProgress(boolean inProgress) {
+        if (inProgress) {
             progressBar.setVisibility(View.VISIBLE);
             loginBtn.setVisibility(View.GONE);
         } else {
@@ -120,11 +125,11 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
-    private boolean validate(String email, String pass){
-        int flag=0;
-        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()){
+    private boolean validate(String email, String pass) {
+        int flag = 0;
+        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             emailEditText.setError("Email is invalid");
-            flag=1;
+            flag = 1;
         }
         if (pass.length() < 6) {
             passEditText.setError("Password must be of six characters");
@@ -133,7 +138,7 @@ public class LoginActivity extends AppCompatActivity {
         return flag == 0;
     }
 
-    private void googleSignin() {
+    private void googleSigning() {
         Intent intent = googleSignInClient.getSignInIntent();
         startActivityForResult(intent, 101);
     }
@@ -142,12 +147,12 @@ public class LoginActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == 101){
+        if (requestCode == 101) {
             Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
             try {
                 GoogleSignInAccount account = task.getResult(ApiException.class);
                 firebaseAuth(account.getIdToken());
-            } catch (Exception e){
+            } catch (Exception e) {
                 Toast.makeText(this, "Something went wrong!", Toast.LENGTH_SHORT).show();
             }
         }
@@ -161,28 +166,14 @@ public class LoginActivity extends AppCompatActivity {
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
                             String email = auth.getCurrentUser().getEmail();
-//                            FirebaseAuth.getInstance().getCurrentUser().getDisplayName()
-//                            FirebaseFirestore.getInstance().collection("users").whereEqualTo("email", email)
-//                                    .get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-//                                        @Override
-//                                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
-//                                            if (task.isSuccessful()){
-//                                                if (task.getResult().size() == 0) {
-//                                                    FirebaseFirestore.getInstance().collection("users").add()
-//                                                }
-//                                            }
-//                                        }
-//                                    });
-                            if (email.equals("harshlohiya.photos@gmail.com"))  // Admin
+                            if (ADMIN_EMAILS.contains(email))  // Admin check
                                 startActivity(new Intent(LoginActivity.this, AdminActivity.class));
                             else
                                 startActivity(new Intent(LoginActivity.this, MainActivity.class));
                             finish();
-                        }
-                        else
+                        } else
                             Toast.makeText(LoginActivity.this, "Something went wrong!", Toast.LENGTH_SHORT).show();
                     }
                 });
-
     }
 }

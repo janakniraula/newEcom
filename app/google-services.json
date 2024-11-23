@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "178622817433",
-    "project_id": "shopease-506f6",
-    "storage_bucket": "shopease-506f6.appspot.com"
+    "project_number": "727074504792",
+    "project_id": "buyit-41a86",
+    "storage_bucket": "buyit-41a86.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:178622817433:android:0a85633409deb13b7c4408",
+        "mobilesdk_app_id": "1:727074504792:android:3e1d05f46ab24493764a2d",
         "android_client_info": {
           "package_name": "com.example.newEcom"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBKoiASZZ6Av4eM8euX4IGNPV_xNsYUzkI"
+          "current_key": "AIzaSyCgoVuGCr2uVOh5bklckWY_eQET2Uje0yc"
         }
       ],
       "services": {

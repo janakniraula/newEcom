@@ -1,45 +1,68 @@
 package com.example.newEcom.activities;
 
 import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
-
+import java.util.Arrays;
+import java.util.List;
 import com.airbnb.lottie.LottieAnimationView;
 import com.example.newEcom.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 public class SplashActivity extends AppCompatActivity {
-    LottieAnimationView lottieAnimation;
+    private static final long SPLASH_DELAY = 3000; // 3 seconds
+    private static final List<String> ADMIN_EMAILS = Arrays.asList(
+            "Sthalotus11@gmail.com",
+            "niraulajanak2019@gmail.com"
+    );
+
+    private LottieAnimationView lottieAnimation;
+    private FirebaseAuth firebaseAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
 
-        throw new NullPointerException("This is a deliberate crash for testing purposes for interview."); // comment this line to run the app properly, it was just added for testing purpose using ADB
+        initializeViews();
+        initializeFirebase();
+        startSplashAnimation();
+    }
 
-        //Remove comment from below section for proper working of the app.
+    private void initializeViews() {
+        lottieAnimation = findViewById(R.id.lottieAnimationView);
+    }
 
-//        lottieAnimation = findViewById(R.id.lottieAnimationView);
-//        lottieAnimation.playAnimation();
-//
-//        new Handler().postDelayed(new Runnable() {
-//            @Override
-//            public void run() {
-//                FirebaseUser currUser = FirebaseAuth.getInstance().getCurrentUser();
-//                if (currUser == null) {
-//                    startActivity(new Intent(SplashActivity.this, LoginActivity.class));
-//                } else {
-//                    if (FirebaseAuth.getInstance().getCurrentUser().getEmail().equals("harshlohiya.photos@gmail.com"))
-//                        startActivity(new Intent(SplashActivity.this, AdminActivity.class));
-//                    else
-//                        startActivity(new Intent(SplashActivity.this, MainActivity.class));
-//                }
-//                finish();
-//            }
-//        }, 3000);
+    private void initializeFirebase() {
+        firebaseAuth = FirebaseAuth.getInstance();
+    }
+
+    private void startSplashAnimation() {
+        if (lottieAnimation != null) {
+            lottieAnimation.playAnimation();
+        }
+
+        new Handler().postDelayed(this::navigateToappropriateScreen, SPLASH_DELAY);
+    }
+
+    private void navigateToappropriateScreen() {
+        FirebaseUser currentUser = firebaseAuth.getCurrentUser();
+        Intent intent;
+
+        if (currentUser == null) {
+            intent = new Intent(this, LoginActivity.class);
+        } else {
+            String userEmail = currentUser.getEmail();
+            if (userEmail != null && ADMIN_EMAILS.contains(userEmail)) {
+                intent = new Intent(this, AdminActivity.class);
+            } else {
+                intent = new Intent(this, MainActivity.class);
+            }
+        }
+
+        startActivity(intent);
+        finish();
     }
 }

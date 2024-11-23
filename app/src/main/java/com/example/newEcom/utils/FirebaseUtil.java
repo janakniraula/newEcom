@@ -65,4 +65,5 @@ public class FirebaseUtil {
     public static StorageReference getBannerImageReference(String id){
         return FirebaseStorage.getInstance().getReference().child("banner_images").child(id);
     }
+
 }
